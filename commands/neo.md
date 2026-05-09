@@ -1,6 +1,6 @@
 ---
 description: "Run a remote command from Neo package registries -- like npx for OpenCode"
-neo-version: "0.1.0"
+neo-version: "0.3.0"
 ---
 
 The user wants to dynamically run the package command "$1".

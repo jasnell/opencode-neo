@@ -85,6 +85,7 @@ function getSourceFile(type: string): string {
     case "tool": return "tool.ts"
     case "command": return "command.md"
     case "agent": return "agent.md"
+    case "mcp": return "mcp.json"
     default: return "SKILL.md"
   }
 }

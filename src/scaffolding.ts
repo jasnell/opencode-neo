@@ -31,6 +31,7 @@ export async function scaffoldRegistry(
   await mkdir(join(dir, "tools"), { recursive: true })
   await mkdir(join(dir, "commands"), { recursive: true })
   await mkdir(join(dir, "agents"), { recursive: true })
+  await mkdir(join(dir, "mcps"), { recursive: true })
 
   // Write registry.json
   const index: RegistryIndex = {
@@ -63,6 +64,7 @@ export async function scaffoldRegistry(
       "tools/                 # Tool packages (tool.ts files)",
       "commands/              # Command packages (command.md files)",
       "agents/                # Agent packages (agent.md files)",
+      "mcps/                  # MCP server packages (mcp.json files)",
       "```",
       "",
       "## Federation",
@@ -188,7 +190,7 @@ export async function scaffoldPackage(
   }
 
   // Determine paths
-  const typeDirMap: Record<PackageType, string> = { skill: "skills", tool: "tools", command: "commands", agent: "agents" }
+  const typeDirMap: Record<PackageType, string> = { skill: "skills", tool: "tools", command: "commands", agent: "agents", mcp: "mcps" }
   const typeDir = typeDirMap[type]
   const pkgDir = join(registryDir, typeDir, name)
 
@@ -228,6 +230,13 @@ export async function scaffoldPackage(
         "utf-8",
       )
       break
+    case "mcp":
+      await writeFile(
+        join(pkgDir, "mcp.json"),
+        scaffoldMcpTemplate(name, description),
+        "utf-8",
+      )
+      break
   }
 
   // Update registry.json
@@ -248,7 +257,7 @@ export async function scaffoldPackage(
     "utf-8",
   )
 
-  const fileNameMap: Record<PackageType, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md" }
+  const fileNameMap: Record<PackageType, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md", mcp: "mcp.json" }
   const fileName = fileNameMap[type]
 
   return [
@@ -323,6 +332,18 @@ function scaffoldCommandTemplate(name: string, description: string): string {
     "$ARGUMENTS",
     "",
   ].join("\n")
+}
+
+function scaffoldMcpTemplate(_name: string, _description: string): string {
+  return JSON.stringify(
+    {
+      type: "remote",
+      url: "https://example.com/mcp",
+      enabled: true,
+    },
+    null,
+    2,
+  ) + "\n"
 }
 
 function scaffoldAgentTemplate(name: string, description: string): string {

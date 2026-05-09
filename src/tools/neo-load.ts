@@ -55,6 +55,12 @@ export function buildLoadTool(config: NeoConfig, _$: Shell) {
             `to be available (they can't be loaded dynamically). ` +
             `Use neo_install to install it.`
           )
+        case "mcp":
+          return (
+            `Package "${execArgs.name}" is an MCP server configuration. MCPs must be ` +
+            `installed to be available (they can't be loaded dynamically). ` +
+            `Use neo_install to install it into your opencode.json.`
+          )
       }
     },
   })

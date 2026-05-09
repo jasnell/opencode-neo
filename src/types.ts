@@ -4,7 +4,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 // Package types
 // ---------------------------------------------------------------------------
 
-export type PackageType = "skill" | "tool" | "command" | "agent"
+export type PackageType = "skill" | "tool" | "command" | "agent" | "mcp"
 
 /** A single entry in a registry's registry.json */
 export interface PackageEntry {

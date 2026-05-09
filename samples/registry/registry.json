@@ -1,6 +1,6 @@
 {
   "name": "neo-samples",
-  "description": "Sample Neo registry demonstrating all package types: skills, tools, commands, and agents.",
+  "description": "Sample Neo registry demonstrating all package types: skills, tools, commands, agents, and MCPs.",
   "links": [
     {
       "name": "community",
@@ -11,12 +11,13 @@
   ],
   "bundles": {
     "lorem-all": {
-      "description": "Install everything lorem -- the skill, tool, command, and agent together",
+      "description": "Install everything lorem -- the skill, tool, command, agent, and MCP together",
       "packages": [
         "lorem-ipsum",
         "lorem-generate",
         "lorem",
-        "lorem-writer"
+        "lorem-writer",
+        "lorem-api"
       ]
     }
   },
@@ -49,6 +50,13 @@
       "version": "1.0.0",
       "path": "agents/lorem-writer",
       "tags": ["lorem", "agent", "content", "mockup"]
+    },
+    "lorem-api": {
+      "type": "mcp",
+      "description": "Remote MCP server providing lorem ipsum generation tools",
+      "version": "1.0.0",
+      "path": "mcps/lorem-api",
+      "tags": ["lorem", "mcp", "api"]
     }
   }
 }

@@ -57,7 +57,7 @@ export function buildPublishTool(_config: NeoConfig, _$: Shell, _worktree: strin
       }
 
       // Copy source into registry
-      const typeDirMap: Record<PackageType, string> = { skill: "skills", tool: "tools", command: "commands", agent: "agents" }
+      const typeDirMap: Record<PackageType, string> = { skill: "skills", tool: "tools", command: "commands", agent: "agents", mcp: "mcps" }
       const typeDir = typeDirMap[detection.type]
       const destDir = join(registryDir, typeDir, pkgName)
       await mkdir(destDir, { recursive: true })
@@ -67,7 +67,7 @@ export function buildPublishTool(_config: NeoConfig, _$: Shell, _worktree: strin
         await cp(sourcePath, destDir, { recursive: true })
       } else {
         // Copy single file
-        const destFileMap: Record<PackageType, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md" }
+        const destFileMap: Record<PackageType, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md", mcp: "mcp.json" }
         const destFile = destFileMap[detection.type]
         const content = await readFile(sourcePath, "utf-8")
         await writeFile(join(destDir, destFile), content, "utf-8")
@@ -115,11 +115,25 @@ async function detectSourceType(sourcePath: string): Promise<DetectionResult | n
         await stat(join(sourcePath, "agent.md"))
         return { type: "agent", inferredName: basename(sourcePath) }
       } catch {}
+      try {
+        await stat(join(sourcePath, "mcp.json"))
+        return { type: "mcp", inferredName: basename(sourcePath) }
+      } catch {}
       return null
     }
 
     if (sourcePath.endsWith(".ts")) {
       return { type: "tool", inferredName: basename(sourcePath, ".ts") }
+    }
+    if (sourcePath.endsWith(".json")) {
+      // Check if it's an MCP config
+      try {
+        const content = await readFile(sourcePath, "utf-8")
+        const parsed = JSON.parse(content)
+        if (parsed.type === "local" || parsed.type === "remote") {
+          return { type: "mcp", inferredName: basename(sourcePath, ".json") }
+        }
+      } catch {}
     }
     if (sourcePath.endsWith(".md")) {
       // Distinguish between agent and command by checking frontmatter for mode:

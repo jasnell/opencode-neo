@@ -25,7 +25,7 @@ export function buildListTool(config: NeoConfig, _$: Shell) {
         .default("installed")
         .describe("What to list: installed packages, all available, or packages with updates"),
       type: tool.schema
-        .enum(["skill", "tool", "command", "agent"])
+        .enum(["skill", "tool", "command", "agent", "mcp"])
         .optional()
         .describe("Filter by package type"),
     },

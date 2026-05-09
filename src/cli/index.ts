@@ -49,7 +49,7 @@ Authoring:
                                 Scaffold a new registry
   create <type> <name> [path] [--description <d>]
                                 Add a package to a registry
-      type: skill | tool | command | agent
+      type: skill | tool | command | agent | mcp
   validate <path>               Validate a registry
   publish <source> <registry> [--name <n>] [--description <d>]
                                 Import a local package into a registry

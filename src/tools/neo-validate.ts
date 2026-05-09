@@ -2,7 +2,7 @@ import { join } from "node:path"
 import { readFile, stat, readdir } from "node:fs/promises"
 import { tool } from "@opencode-ai/plugin"
 import type { NeoConfig, RegistryIndex, Shell } from "../types.js"
-import { validateSkill, validateTool, validateCommand, validateAgent } from "../packages/validator.js"
+import { validateSkill, validateTool, validateCommand, validateAgent, validateMcp } from "../packages/validator.js"
 
 export function buildValidateTool(_config: NeoConfig, _$: Shell) {
   return tool({
@@ -51,7 +51,7 @@ async function validateRegistry(dir: string): Promise<string> {
     }
 
     // Check source file
-    const sourceFileMap: Record<string, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md" }
+    const sourceFileMap: Record<string, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md", mcp: "mcp.json" }
     const sourceFile = sourceFileMap[entry.type] ?? "SKILL.md"
     const sourcePath = join(pkgDir, sourceFile)
 
@@ -69,6 +69,7 @@ async function validateRegistry(dir: string): Promise<string> {
         case "tool": result = validateTool(content); break
         case "command": result = validateCommand(content); break
         case "agent": result = validateAgent(content); break
+        case "mcp": result = validateMcp(content); break
         default: result = { valid: false, error: `unknown package type "${entry.type}"` }; break
       }
       if (!result.valid) {
@@ -88,7 +89,7 @@ async function validateRegistry(dir: string): Promise<string> {
   }
 
   // 3. Check for orphaned packages (dirs on disk not in index)
-  for (const typeDir of ["skills", "tools", "commands", "agents"]) {
+  for (const typeDir of ["skills", "tools", "commands", "agents", "mcps"]) {
     const typePath = join(dir, typeDir)
     if (!(await exists(typePath))) continue
 

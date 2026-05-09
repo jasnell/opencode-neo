@@ -1,12 +1,13 @@
 import { homedir } from "node:os"
 import { join, dirname } from "node:path"
-import { mkdir, writeFile, readdir, stat } from "node:fs/promises"
+import { mkdir, writeFile, readFile, readdir, stat } from "node:fs/promises"
 import type { NeoConfig, PackageType, ResolvedPackage } from "../types.js"
 import { saveConfig } from "../config.js"
 import { readCachedFile } from "../registry/cache.js"
 import { resolvePackage } from "../registry/resolver.js"
-import { validateSkill, validateTool, validateCommand, validateAgent } from "./validator.js"
+import { validateSkill, validateTool, validateCommand, validateAgent, validateMcp } from "./validator.js"
 import { validateName, safeJoin } from "../safepath.js"
+import { parseJsonc } from "../jsonc.js"
 
 /**
  * Check if a file or directory exists on disk.
@@ -72,6 +73,10 @@ function getInstallPath(
       return join(base, "commands", `${name}.md`)
     case "agent":
       return join(base, "agents", `${name}.md`)
+    case "mcp":
+      // MCPs don't have a file path -- they inject into opencode.json.
+      // Return the opencode.json path as a sentinel.
+      return join(base === join(homedir(), ".config", "opencode") ? base : join(base, ".."), "opencode.json")
   }
 }
 
@@ -88,6 +93,8 @@ function getSourceFile(type: PackageType): string {
       return "command.md"
     case "agent":
       return "agent.md"
+    case "mcp":
+      return "mcp.json"
   }
 }
 
@@ -131,6 +138,22 @@ export async function installPackage(
   const validation = validateByType(resolved.entry.type, content)
   if (!validation.valid) {
     return `Package "${name}" failed validation: ${validation.error}`
+  }
+
+  // MCP packages inject into opencode.json instead of copying files
+  if (resolved.entry.type === "mcp") {
+    const mcpResult = await installMcp(name, content, scope, worktree)
+    if (mcpResult) return mcpResult
+
+    config.installed[name] = {
+      registry: resolved.registry,
+      type: "mcp",
+      version: resolved.entry.version,
+      scope,
+      installedAt: new Date().toISOString(),
+    }
+    await saveConfig(config)
+    return `Installed MCP "${name}" (v${resolved.entry.version}) from registry "${resolved.registry}". Restart OpenCode to activate.`
   }
 
   // Check for conflicts with non-Neo-managed files
@@ -221,6 +244,8 @@ function validateByType(type: PackageType, content: string) {
       return validateCommand(content)
     case "agent":
       return validateAgent(content)
+    case "mcp":
+      return validateMcp(content)
   }
 }
 
@@ -269,6 +294,97 @@ async function copyAdditionalToolFiles(
   } catch {
     // No additional files or directory doesn't exist -- that's fine
   }
+
+  return null
+}
+
+// ---------------------------------------------------------------------------
+// MCP installation
+// ---------------------------------------------------------------------------
+
+/**
+ * Install an MCP by injecting its config into the user's opencode.json.
+ * Returns an error message string on failure, or null on success.
+ */
+async function installMcp(
+  name: string,
+  mcpJsonContent: string,
+  scope: "global" | "project",
+  worktree?: string,
+): Promise<string | null> {
+  const mcpConfig = JSON.parse(mcpJsonContent)
+
+  // Determine which opencode.json to modify
+  const configDir = scope === "project" && worktree
+    ? worktree
+    : join(homedir(), ".config", "opencode")
+
+  // Check for .jsonc variant first
+  const jsonPath = join(configDir, "opencode.json")
+  const jsoncPath = join(configDir, "opencode.jsonc")
+  let targetPath = jsonPath
+  try { await stat(jsoncPath); targetPath = jsoncPath } catch {
+    // jsonPath is the default, no reassignment needed
+  }
+
+  // Read existing config
+  let text: string
+  try {
+    text = await readFile(targetPath, "utf-8")
+  } catch {
+    text = `{\n  "$schema": "https://opencode.ai/config.json"\n}\n`
+  }
+
+  // Check for existing MCP with this name
+  const parsed = parseJsonc(text)
+  if (parsed.mcp?.[name]) {
+    return (
+      `Cannot install MCP "${name}": an MCP with this name already exists in ${targetPath}. ` +
+      `Remove it first or choose a different package name.`
+    )
+  }
+
+  // Build the MCP entry JSON
+  const mcpEntryJson = JSON.stringify(mcpConfig, null, 2)
+    .split("\n")
+    .map((line, i) => i === 0 ? line : `      ${line}`)
+    .join("\n")
+
+  // Inject into the config
+  if (parsed.mcp && typeof parsed.mcp === "object") {
+    // mcp key exists -- add our entry inside it
+    const mcpKeyMatch = text.match(/"mcp"\s*:\s*\{/)
+    if (mcpKeyMatch && mcpKeyMatch.index !== undefined) {
+      const mcpStart = mcpKeyMatch.index + mcpKeyMatch[0].length
+      let depth = 1
+      let pos = mcpStart
+      while (pos < text.length && depth > 0) {
+        if (text[pos] === '"') {
+          pos++
+          while (pos < text.length && text[pos] !== '"') {
+            if (text[pos] === '\\') pos++
+            pos++
+          }
+        }
+        if (text[pos] === "{") depth++
+        if (text[pos] === "}") depth--
+        pos++
+      }
+      const mcpClose = pos - 1
+      const before = text.slice(0, mcpClose).trimEnd()
+      const needsComma = before.match(/[}\]"'\w\d]$/) ? "," : ""
+      const entry = `\n    "${name}": ${mcpEntryJson}\n  `
+      text = before + needsComma + entry + text.slice(mcpClose)
+    }
+  } else {
+    // No mcp key -- add one
+    const { addJsoncKey } = await import("../jsonc.js")
+    const mcpBlock = `"mcp": {\n    "${name}": ${mcpEntryJson}\n  }`
+    text = addJsoncKey(text, "mcp", mcpBlock)
+  }
+
+  await mkdir(dirname(targetPath), { recursive: true })
+  await writeFile(targetPath, text, "utf-8")
 
   return null
 }

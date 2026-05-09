@@ -1,9 +1,10 @@
 import { homedir } from "node:os"
 import { join } from "node:path"
-import { rm } from "node:fs/promises"
+import { rm, readFile, writeFile, stat } from "node:fs/promises"
 import type { NeoConfig } from "../types.js"
 import { saveConfig } from "../config.js"
 import { validateName } from "../safepath.js"
+import { parseJsonc } from "../jsonc.js"
 
 /**
  * Uninstall a previously installed package.
@@ -34,20 +35,19 @@ export async function uninstallPackage(
   try {
     switch (installed.type) {
       case "skill":
-        // Skills live in a subdirectory: skills/<name>/SKILL.md
         await rm(join(base, "skills", name), { recursive: true, force: true })
         break
       case "tool":
-        // Tools are single files: tools/<name>.ts
         await rm(join(base, "tools", `${name}.ts`), { force: true })
         break
       case "command":
-        // Commands are single files: commands/<name>.md
         await rm(join(base, "commands", `${name}.md`), { force: true })
         break
       case "agent":
-        // Agents are single files: agents/<name>.md
         await rm(join(base, "agents", `${name}.md`), { force: true })
+        break
+      case "mcp":
+        await uninstallMcp(name, installed.scope, worktree)
         break
     }
   } catch (err: any) {
@@ -62,4 +62,37 @@ export async function uninstallPackage(
     : " Restart OpenCode for the change to take effect."
 
   return `Uninstalled "${name}" (${installed.type}).${restartNote}`
+}
+
+/**
+ * Remove an MCP entry from the user's opencode.json.
+ */
+async function uninstallMcp(
+  name: string,
+  scope: "global" | "project",
+  worktree?: string,
+): Promise<void> {
+  const configDir = scope === "project" && worktree
+    ? worktree
+    : join(homedir(), ".config", "opencode")
+
+  const jsonPath = join(configDir, "opencode.json")
+  const jsoncPath = join(configDir, "opencode.jsonc")
+  let targetPath = jsonPath
+  try { await stat(jsoncPath); targetPath = jsoncPath } catch {
+    try { await stat(jsonPath) } catch { return }
+  }
+
+  const text = await readFile(targetPath, "utf-8")
+  const parsed = parseJsonc(text)
+
+  if (!parsed.mcp?.[name]) return
+
+  // Remove the MCP entry from the mcp object
+  // Use a targeted regex to remove just the key within the mcp block
+  const mcpKeyPattern = new RegExp(
+    `\\s*"${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"\\s*:\\s*\\{[^}]*\\}\\s*,?`,
+  )
+  const updated = text.replace(mcpKeyPattern, "")
+  await writeFile(targetPath, updated, "utf-8")
 }

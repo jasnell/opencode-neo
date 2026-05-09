@@ -398,12 +398,12 @@ export async function create($: Shell, config: NeoConfig, args: string[]) {
     const dir = resolve(path ?? `./${name}`)
     const result = await scaffoldRegistry($, dir, name, description || `A Neo registry`, !getFlag(args, "no-git"))
     console.log(result)
-  } else if (["skill", "tool", "command", "agent"].includes(type)) {
+  } else if (["skill", "tool", "command", "agent", "mcp"].includes(type)) {
     const registryDir = resolve(path ?? ".")
     const result = await scaffoldPackage(registryDir, type as PackageType, name, description || `A Neo ${type}`)
     console.log(result)
   } else {
-    console.error(`Unknown type: ${type}. Use: registry, skill, tool, command, agent`)
+    console.error(`Unknown type: ${type}. Use: registry, skill, tool, command, agent, mcp`)
     process.exit(1)
   }
 }
@@ -440,7 +440,7 @@ export async function validate(args: string[]) {
   console.log(`Registry: ${index.name} (${pkgCount} packages)\n`)
 
   for (const [name, entry] of Object.entries<any>(index.packages ?? {})) {
-    const sourceMap: Record<string, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md" }
+    const sourceMap: Record<string, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md", mcp: "mcp.json" }
     const sourceFile = sourceMap[entry.type] ?? "SKILL.md"
     const sourcePath = join(dir, entry.path, sourceFile)
 
@@ -541,7 +541,7 @@ export async function publish(config: NeoConfig, args: string[]) {
     process.exit(1)
     return
   }
-  const typeDirMap: Record<PackageType, string> = { skill: "skills", tool: "tools", command: "commands", agent: "agents" }
+  const typeDirMap: Record<PackageType, string> = { skill: "skills", tool: "tools", command: "commands", agent: "agents", mcp: "mcps" }
   const destDir = join(absRegistry, typeDirMap[type], pkgName)
 
   // Read and update registry.json
@@ -564,7 +564,7 @@ export async function publish(config: NeoConfig, args: string[]) {
   if (s.isDirectory()) {
     await cp(absSource, destDir, { recursive: true })
   } else {
-    const fileMap: Record<PackageType, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md" }
+    const fileMap: Record<PackageType, string> = { skill: "SKILL.md", tool: "tool.ts", command: "command.md", agent: "agent.md", mcp: "mcp.json" }
     await cp(absSource, join(destDir, fileMap[type]))
   }
 

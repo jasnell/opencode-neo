@@ -4,6 +4,7 @@ import {
   validateTool,
   validateCommand,
   validateAgent,
+  validateMcp,
 } from "../src/packages/validator.js"
 
 describe("validateSkill", () => {
@@ -134,5 +135,51 @@ You are a code reviewer.
     const result = validateAgent("---\ndescription: A reviewer\n---\nPrompt")
     expect(result.valid).toBe(false)
     expect(result.error).toContain("missing 'mode'")
+  })
+})
+
+describe("validateMcp", () => {
+  it("accepts valid remote MCP", () => {
+    const content = JSON.stringify({ type: "remote", url: "https://mcp.example.com/mcp", enabled: true })
+    expect(validateMcp(content)).toEqual({ valid: true })
+  })
+
+  it("accepts valid local MCP", () => {
+    const content = JSON.stringify({ type: "local", command: ["npx", "-y", "some-mcp"], enabled: true })
+    expect(validateMcp(content)).toEqual({ valid: true })
+  })
+
+  it("rejects empty content", () => {
+    expect(validateMcp("")).toEqual({ valid: false, error: "mcp.json is empty" })
+  })
+
+  it("rejects invalid JSON", () => {
+    const result = validateMcp("not json")
+    expect(result.valid).toBe(false)
+    expect(result.error).toContain("not valid JSON")
+  })
+
+  it("rejects missing type field", () => {
+    const result = validateMcp(JSON.stringify({ url: "https://example.com" }))
+    expect(result.valid).toBe(false)
+    expect(result.error).toContain("missing required 'type'")
+  })
+
+  it("rejects invalid type value", () => {
+    const result = validateMcp(JSON.stringify({ type: "invalid" }))
+    expect(result.valid).toBe(false)
+    expect(result.error).toContain("invalid type")
+  })
+
+  it("rejects local MCP without command", () => {
+    const result = validateMcp(JSON.stringify({ type: "local" }))
+    expect(result.valid).toBe(false)
+    expect(result.error).toContain("missing required 'command'")
+  })
+
+  it("rejects remote MCP without url", () => {
+    const result = validateMcp(JSON.stringify({ type: "remote" }))
+    expect(result.valid).toBe(false)
+    expect(result.error).toContain("missing required 'url'")
   })
 })

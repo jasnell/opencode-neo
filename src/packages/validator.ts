@@ -108,3 +108,37 @@ export function validateAgent(content: string): ValidationResult {
 
   return { valid: true }
 }
+
+/**
+ * Validate an mcp.json file has the required fields.
+ */
+export function validateMcp(content: string): ValidationResult {
+  if (!content.trim()) {
+    return { valid: false, error: "mcp.json is empty" }
+  }
+
+  let parsed: any
+  try {
+    parsed = JSON.parse(content)
+  } catch {
+    return { valid: false, error: "mcp.json is not valid JSON" }
+  }
+
+  if (!parsed.type) {
+    return { valid: false, error: "mcp.json is missing required 'type' field ('local' or 'remote')" }
+  }
+
+  if (parsed.type !== "local" && parsed.type !== "remote") {
+    return { valid: false, error: `mcp.json has invalid type "${parsed.type}" (must be 'local' or 'remote')` }
+  }
+
+  if (parsed.type === "local" && (!parsed.command || !Array.isArray(parsed.command) || parsed.command.length === 0)) {
+    return { valid: false, error: "Local MCP is missing required 'command' array" }
+  }
+
+  if (parsed.type === "remote" && !parsed.url) {
+    return { valid: false, error: "Remote MCP is missing required 'url' field" }
+  }
+
+  return { valid: true }
+}

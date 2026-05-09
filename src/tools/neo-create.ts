@@ -8,13 +8,13 @@ export function buildCreateTool(config: NeoConfig, $: Shell, _worktree: string) 
     description:
       "Scaffold a new Neo registry or add a new package to an existing registry. " +
       "Use type 'registry' to create a new empty registry with the correct structure. " +
-      "Use type 'skill', 'tool', 'command', or 'agent' to add a new package to a registry directory.",
+      "Use type 'skill', 'tool', 'command', 'agent', or 'mcp' to add a new package to a registry directory.",
     args: {
       type: tool.schema
-        .enum(["registry", "skill", "tool", "command", "agent"])
+        .enum(["registry", "skill", "tool", "command", "agent", "mcp"])
         .describe(
           "What to create: 'registry' scaffolds a new registry repo, " +
-            "'skill'/'tool'/'command'/'agent' adds a package to an existing registry",
+            "'skill'/'tool'/'command'/'agent'/'mcp' adds a package to an existing registry",
         ),
       name: tool.schema
         .string()

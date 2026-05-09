@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { readFile, stat } from "node:fs/promises"
 import { join } from "node:path"
-import { validateSkill, validateTool, validateCommand, validateAgent } from "../src/packages/validator.js"
+import { validateSkill, validateTool, validateCommand, validateAgent, validateMcp } from "../src/packages/validator.js"
 import type { RegistryIndex } from "../src/types.js"
 
 const REGISTRY_DIR = join(__dirname, "..", "samples", "registry")
@@ -14,7 +14,7 @@ describe("sample registry", () => {
     index = JSON.parse(raw)
     expect(index.name).toBe("neo-samples")
     expect(index.packages).toBeDefined()
-    expect(Object.keys(index.packages).length).toBe(4)
+    expect(Object.keys(index.packages).length).toBe(5)
   })
 
   it("declares all four package types", async () => {
@@ -25,6 +25,7 @@ describe("sample registry", () => {
     expect(types).toContain("tool")
     expect(types).toContain("command")
     expect(types).toContain("agent")
+    expect(types).toContain("mcp")
   })
 
   it("has a bundle referencing valid packages", async () => {
@@ -67,6 +68,12 @@ describe("sample registry", () => {
   it("has valid lorem-writer agent", async () => {
     const content = await readFile(join(REGISTRY_DIR, "agents/lorem-writer/agent.md"), "utf-8")
     const result = validateAgent(content)
+    expect(result).toEqual({ valid: true })
+  })
+
+  it("has valid lorem-api mcp", async () => {
+    const content = await readFile(join(REGISTRY_DIR, "mcps/lorem-api/mcp.json"), "utf-8")
+    const result = validateMcp(content)
     expect(result).toEqual({ valid: true })
   })
 

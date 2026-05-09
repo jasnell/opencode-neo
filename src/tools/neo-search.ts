@@ -21,7 +21,7 @@ export function buildSearchTool(config: NeoConfig, _$: Shell) {
         .string()
         .describe("Search query -- a name, keyword, or description fragment"),
       type: tool.schema
-        .enum(["skill", "tool", "command", "agent"])
+        .enum(["skill", "tool", "command", "agent", "mcp"])
         .optional()
         .describe("Filter results by package type"),
     },

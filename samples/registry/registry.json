@@ -1,0 +1,54 @@
+{
+  "name": "neo-samples",
+  "description": "Sample Neo registry demonstrating all package types: skills, tools, commands, and agents.",
+  "links": [
+    {
+      "name": "community",
+      "url": "https://github.com/opencode-neo/community-registry",
+      "relationship": "recommends",
+      "description": "Community-maintained packages"
+    }
+  ],
+  "bundles": {
+    "lorem-all": {
+      "description": "Install everything lorem -- the skill, tool, command, and agent together",
+      "packages": [
+        "lorem-ipsum",
+        "lorem-generate",
+        "lorem",
+        "lorem-writer"
+      ]
+    }
+  },
+  "packages": {
+    "lorem-ipsum": {
+      "type": "skill",
+      "description": "Teaches the agent lorem ipsum conventions, placeholder text patterns, and when to use them",
+      "version": "1.0.0",
+      "path": "skills/lorem-ipsum",
+      "tags": ["lorem", "placeholder", "content", "sample"]
+    },
+    "lorem-generate": {
+      "type": "tool",
+      "description": "Generate lorem ipsum placeholder text with configurable paragraph count and style",
+      "version": "1.0.0",
+      "path": "tools/lorem-generate",
+      "tags": ["lorem", "generator", "placeholder", "text"],
+      "requires": ["lorem-ipsum"]
+    },
+    "lorem": {
+      "type": "command",
+      "description": "Quick-generate lorem ipsum text via /neo lorem <paragraphs>",
+      "version": "1.0.0",
+      "path": "commands/lorem",
+      "tags": ["lorem", "command", "quick"]
+    },
+    "lorem-writer": {
+      "type": "agent",
+      "description": "A subagent specialized in generating realistic placeholder content for UI mockups, documentation, and tests",
+      "version": "1.0.0",
+      "path": "agents/lorem-writer",
+      "tags": ["lorem", "agent", "content", "mockup"]
+    }
+  }
+}

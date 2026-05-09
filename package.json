@@ -1,0 +1,63 @@
+{
+  "name": "opencode-neo",
+  "version": "0.1.0",
+  "description": "Dynamic package manager for OpenCode skills, tools, and commands -- \"I know kung-fu\"",
+  "author": "James M Snell <jasnell@gmail.com>",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "opencode-neo": "bin/opencode-neo.mjs"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.4.7",
+    "tsx": "^4.21.0"
+  },
+  "scripts": {
+    "lint": "eslint src/ tests/",
+    "lint:fix": "eslint src/ tests/ --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "setup": "node scripts/setup.mjs",
+    "setup:check": "node scripts/setup.mjs --check",
+    "setup:uninstall": "node scripts/setup.mjs --uninstall",
+    "postinstall": "node scripts/postinstall.mjs"
+  },
+  "files": [
+    "src",
+    "bin",
+    "commands",
+    "scripts"
+  ],
+  "keywords": [
+    "opencode",
+    "plugin",
+    "skills",
+    "commands",
+    "agents",
+    "tools",
+    "package-manager"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasnell/opencode-neo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jasnell/opencode-neo/issues"
+  },
+  "homepage": "https://github.com/jasnell/opencode-neo#readme",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.6.2",
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.5"
+  }
+}

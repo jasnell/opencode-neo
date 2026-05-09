@@ -4,7 +4,7 @@
   "links": [
     {
       "name": "community",
-      "url": "https://github.com/opencode-neo/community-registry",
+      "url": "https://github.com/jasnell/opencode-neo-registry",
       "relationship": "recommends",
       "description": "Community-maintained packages"
     }
